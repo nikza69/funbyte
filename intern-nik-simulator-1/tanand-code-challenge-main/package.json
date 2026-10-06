@@ -1,0 +1,21 @@
+{
+  "name": "office-hvac-simulator",
+  "version": "1.0.0",
+  "description": "Node.js black-box office HVAC simulator with REST API for sensors and AC control",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0",
+    "mqtt": "^5.16.0"
+  }
+}

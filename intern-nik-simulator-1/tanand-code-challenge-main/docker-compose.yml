@@ -1,0 +1,13 @@
+services:
+  simulator:
+    build: .
+    ports:
+      - "6677:6677"
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    command: mosquitto -c /mosquitto-no-auth.conf

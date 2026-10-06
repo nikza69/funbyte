@@ -1,0 +1,45 @@
+# Everything the TypeScript apps need, in one command:  docker compose up -d --build
+# (The simulator folder is built from SIM_DIR; default = a sibling folder named tanand-code-challenge-main.)
+services:
+  mosquitto:                      # MQTT broker, port 1883
+    image: eclipse-mosquitto:2
+    command: mosquitto -c /mosquitto-no-auth.conf
+    ports: ["1883:1883"]          # your original compose did NOT publish this, so controller/datastore could not connect
+    restart: unless-stopped
+
+  influxdb:                       # time-series history, port 8086
+    image: influxdb:2.7
+    ports: ["8086:8086"]
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminpassword1
+      DOCKER_INFLUXDB_INIT_ORG: rand
+      DOCKER_INFLUXDB_INIT_BUCKET: rand
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: funbyte-token
+    volumes: ["influx-data:/var/lib/influxdb2"]
+    restart: unless-stopped
+
+  postgres:                       # alerts, automation events, control state, port 5432
+    image: postgres:16
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_USER: funbyte
+      POSTGRES_PASSWORD: funbyte
+      POSTGRES_DB: funbyte
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro   # creates the tables on first start
+    restart: unless-stopped
+
+  simulator:                      # the HVAC simulator, REST on 6677, publishes to MQTT topic funbyte/status every 5 s
+    build: ${SIM_DIR:-../tanand-code-challenge-main}
+    ports: ["6677:6677"]
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+    depends_on: [mosquitto]
+    restart: unless-stopped
+
+volumes:
+  influx-data:
+  pg-data:

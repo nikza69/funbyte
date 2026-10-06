@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funbyte &mdash; Office HVAC Simulator API</title>
+<link rel="icon" type="image/png" href="/funbyte-logo.png">
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-alt: #111827;
+    --panel: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #34d399;
+    --get: #34d399;
+    --post: #fb923c;
+    --code-bg: #0b1220;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  header {
+    padding: 3rem 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header .logo {
+    height: 64px;
+    margin-bottom: 0.75rem;
+  }
+
+  header h1 {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  header p {
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    border-left: 4px solid var(--accent);
+    padding-left: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  ul {
+    padding-left: 1.25rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: rgba(56, 189, 248, 0.08);
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .endpoint {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .method {
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    color: #0f172a;
+  }
+
+  .method.get { background: var(--get); }
+  .method.post { background: var(--post); }
+
+  .path {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .desc {
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+  }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0.6rem 0 0.2rem;
+  }
+
+  .blackbox-note {
+    border-left: 3px solid var(--accent-2);
+    background: rgba(52, 211, 153, 0.08);
+    padding: 0.9rem 1.1rem;
+    border-radius: 0 8px 8px 0;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.5rem; }
+    .card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="/funbyte-logo.png" alt="Funbyte logo">
+  <h1>Funbyte &mdash; Office HVAC Simulator API</h1>
+  <p>A black-box office environment simulator exposing sensor readings and split-unit air conditioner control over REST.</p>
+</header>
+
+<main>
+
+  <section>
+    <h2>Overview</h2>
+    <div class="card">
+      <p>This simulator models a single office room continuously, running an internal simulation loop once per second regardless of API traffic. It exposes the following equipment:</p>
+      <ul>
+        <li><strong>Two temperature sensors</strong> (A &amp; B) reporting °C, with independent measurement noise</li>
+        <li><strong>Two humidity sensors</strong> (A &amp; B) reporting %RH, with independent measurement noise</li>
+        <li><strong>One human activity sensor</strong> reporting <code>low</code>, <code>medium</code>, or <code>high</code>, changing automatically every 5&ndash;15 minutes</li>
+        <li><strong>One split-unit air conditioner</strong> supporting on/off power and a temperature setpoint (cool mode only)</li>
+      </ul>
+      <div class="blackbox-note">
+        <strong>Black-box design:</strong> the simulator's actual internal room temperature and humidity are never exposed by any API. Clients only ever see noisy sensor readings derived from that hidden state &mdash; exactly as a real office environment would behave to an external monitoring or control system.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Equipment Summary</h2>
+    <table>
+      <thead>
+        <tr><th>Equipment</th><th>Quantity</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Temperature Sensors</td><td>2</td></tr>
+        <tr><td>Humidity Sensors</td><td>2</td></tr>
+        <tr><td>Activity Sensor</td><td>1</td></tr>
+        <tr><td>Split Air Conditioner</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>API Reference</h2>
+
+    <div class="card">
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="path">/api/status</span>
+      </div>
+      <p class="desc">Returns all sensor readings and current air-conditioner status. Internal room state is never exposed.</p>
+      <p class="label">Response</p>
+      <pre><code>{
+  "sensors": {
+    "temperatureA": 25.4,
+    "temperatureB": 25.2,
+    "humidityA": 56.8,
+    "humidityB": 55.9,
+    "activity": "medium"
+  },
+  "airConditioner": {
+    "power": true,
+    "setpoint": 24,
+    "mode": "cool"
+  }
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="path">/api/ac/on</span>
+      </div>
+      <p class="desc">Turns the air conditioner on.</p>
+      <p class="label">Response</p>
+      <pre><code>{
+  "success": true,
+  "power": true
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="path">/api/ac/off</span>
+      </div>
+      <p class="desc">Turns the air conditioner off.</p>
+      <p class="label">Response</p>
+      <pre><code>{
+  "success": true,
+  "power": false
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="path">/api/ac/setpoint</span>
+      </div>
+      <p class="desc">Sets the AC temperature setpoint. Must be between 18 and 30 (°C).</p>
+      <p class="label">Request</p>
+      <pre><code>{
+  "setpoint": 23
+}</code></pre>
+      <p class="label">Response</p>
+      <pre><code>{
+  "success": true,
+  "setpoint": 23
+}</code></pre>
+      <p class="label">Error response (400 Bad Request)</p>
+      <pre><code>{
+  "success": false,
+  "error": "Setpoint must be between 18 and 30"
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="path">/api/ac</span>
+      </div>
+      <p class="desc">Returns the current air-conditioner status.</p>
+      <p class="label">Response</p>
+      <pre><code>{
+  "power": true,
+  "setpoint": 24,
+  "mode": "cool"
+}</code></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>Curl Examples</h2>
+    <div class="card">
+      <p class="label">Get Status</p>
+      <pre><code>curl <span class="base-url">http://localhost:3000</span>/api/status</code></pre>
+
+      <p class="label">Turn AC On</p>
+      <pre><code>curl -X POST <span class="base-url">http://localhost:3000</span>/api/ac/on</code></pre>
+
+      <p class="label">Turn AC Off</p>
+      <pre><code>curl -X POST <span class="base-url">http://localhost:3000</span>/api/ac/off</code></pre>
+
+      <p class="label">Set Setpoint</p>
+      <pre><code>curl -X POST \
+  <span class="base-url">http://localhost:3000</span>/api/ac/setpoint \
+  -H "Content-Type: application/json" \
+  -d '{"setpoint":22}'</code></pre>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Funbyte Office HVAC Simulator &mdash; runs continuously in memory, no database, no authentication.
+</footer>
+
+<script>
+  // Fill in curl examples with the actual origin this page was served from,
+  // so docs work correctly regardless of host/port.
+  document.querySelectorAll('.base-url').forEach((el) => {
+    el.textContent = window.location.origin;
+  });
+</script>
+
+</body>
+</html>
